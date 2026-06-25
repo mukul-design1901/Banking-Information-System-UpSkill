@@ -12,6 +12,7 @@ class BankAccount {
     String contact;
     String password;
     double balance;
+    ArrayList<String> statement; // Week 2 Feature: Statement Ledger Tracking
 
     // Constructor to create a new account object
     public BankAccount(String accountNumber, String name, String address, String contact, String password, double balance) {
@@ -21,11 +22,19 @@ class BankAccount {
         this.contact = contact;
         this.password = password;
         this.balance = balance;
+        this.statement = new ArrayList<>();
+        // Record the opening baseline entry
+        this.statement.add("Account Opened with Initial Deposit: ₹" + balance);
+    }
+
+    // Functional Transaction Methods
+    public void addTransaction(String log) {
+        this.statement.add(log);
     }
 }
 
 public class BankingApp {
-    // Session database to store all registered users [cite: 17]
+    // Session database to store all registered users
     static ArrayList<BankAccount> database = new ArrayList<>();
     static BankAccount loggedInUser = null;
     static Scanner sc = new Scanner(System.in);
@@ -35,7 +44,7 @@ public class BankingApp {
 
         while (true) {
             if (loggedInUser == null) {
-                // Main Menu before logging in [cite: 14, 16]
+                // Main Menu before logging in
                 System.out.println("\n1. Register New Account");
                 System.out.println("2. Login to Account");
                 System.out.println("3. Exit Application");
@@ -54,13 +63,13 @@ public class BankingApp {
                     System.out.println("Invalid option! Please try again.");
                 }
             } else {
-                // Dashboard Menu after successful login [cite: 16]
+                // Dashboard Menu after successful login
                 System.out.println("\n--- Welcome " + loggedInUser.name + " (Acc No: " + loggedInUser.accountNumber + ") ---");
                 System.out.println("1. View Profile / Update Account Information");
-                System.out.println("2. Deposit Money (Week 2 Feature)");
-                System.out.println("3. Withdraw Money (Week 2 Feature)");
-                System.out.println("4. Fund Transfer (Week 2 Feature)");
-                System.out.println("5. View Account Statement (Week 2 Feature)");
+                System.out.println("2. Deposit Money");
+                System.out.println("3. Withdraw Money");
+                System.out.println("4. Fund Transfer");
+                System.out.println("5. View Account Statement");
                 System.out.println("6. Logout");
                 System.out.print("Choose an option (1-6): ");
                 int choice = sc.nextInt();
@@ -68,11 +77,17 @@ public class BankingApp {
 
                 if (choice == 1) {
                     manageAccount();
+                } else if (choice == 2) {
+                    deposit();
+                } else if (choice == 3) {
+                    withdraw();
+                } else if (choice == 4) {
+                    fundTransfer();
+                } else if (choice == 5) {
+                    viewStatement();
                 } else if (choice == 6) {
                     System.out.println("Logged out successfully.");
                     loggedInUser = null; // Reset the active session
-                } else if (choice >= 2 && choice <= 5) {
-                    System.out.println("[Notice] This banking operation is scheduled for Week 2 development.");
                 } else {
                     System.out.println("Invalid option!");
                 }
@@ -80,7 +95,7 @@ public class BankingApp {
         }
     }
 
-    // 1. User Registration Feature [cite: 9, 21]
+    // 1. User Registration Feature
     public static void register() {
         System.out.println("\n--- USER REGISTRATION FORM ---");
         System.out.print("Enter Your Full Name: ");
@@ -95,22 +110,22 @@ public class BankingApp {
         double initialDeposit = sc.nextDouble();
         sc.nextLine(); // Clear scanner buffer
 
-        // Generate a random 10-digit account number [cite: 10, 23]
+        // Generate a random 10-digit account number
         Random rand = new Random();
         long num = (long) (rand.nextDouble() * 9000000000L) + 1000000000L;
         String generatedAccNum = String.valueOf(num);
 
-        // Save details to memory temporary session array list [cite: 17, 23]
+        // Save details to memory temporary session array list
         BankAccount newAccount = new BankAccount(generatedAccNum, name, address, contact, password, initialDeposit);
         database.add(newAccount);
 
-        // Confirmation output display [cite: 24]
-        System.out.println("\n[SUCCESS] Registration Completed Successfully! [cite: 24]");
-        System.out.println("Your Unique Generated Account Number is: " + generatedAccNum + " [cite: 23]");
+        // Confirmation output display
+        System.out.println("\n[SUCCESS] Registration Completed Successfully!");
+        System.out.println("Your Unique Generated Account Number is: " + generatedAccNum);
         System.out.println("Please write this down to use for logging in.");
     }
 
-    // 2. Basic Login / Password Protection Feature [cite: 14]
+    // 2. Basic Login / Password Protection Feature
     public static void login() {
         System.out.println("\n--- SECURE USER LOGIN ---");
         System.out.print("Enter Your 10-Digit Account Number: ");
@@ -119,7 +134,7 @@ public class BankingApp {
         String pass = sc.nextLine();
 
         boolean found = false;
-        // Search matching credentials inside session database [cite: 14]
+        // Search matching credentials inside session database
         for (BankAccount acc : database) {
             if (acc.accountNumber.equals(accNum) && acc.password.equals(pass)) {
                 loggedInUser = acc; // Establish active runtime session
@@ -130,18 +145,18 @@ public class BankingApp {
         }
 
         if (!found) {
-            System.out.println("[Error] Invalid Account Number or Password. Access Denied! [cite: 15]");
+            System.out.println("[Error] Invalid Account Number or Password. Access Denied!");
         }
     }
 
-    // 3. Account Management / Profile Update Feature [cite: 10, 25]
+    // 3. Account Management / Profile Update Feature
     public static void manageAccount() {
         System.out.println("\n--- CURRENT ACCOUNT PROFILE ---");
         System.out.println("Account Number: " + loggedInUser.accountNumber);
         System.out.println("1. Name: " + loggedInUser.name);
         System.out.println("2. Address: " + loggedInUser.address);
         System.out.println("3. Contact Details: " + loggedInUser.contact);
-        System.out.println("Current Balance: $" + loggedInUser.balance);
+        System.out.println("Current Balance: ₹" + loggedInUser.balance);
         System.out.println("---------------------------------");
 
         System.out.print("Do you want to update your profile details? (yes/no): ");
@@ -166,7 +181,100 @@ public class BankingApp {
                 loggedInUser.contact = newContact;
             }
 
-            System.out.println("[SUCCESS] Your account information has been successfully updated! [cite: 27]");
+            System.out.println("[SUCCESS] Your account information has been successfully updated!");
         }
+    }
+
+    // --- WEEK 2 FUNCTIONAL MODULE IMPLEMENTATIONS ---
+
+    // 4. Deposit Money Logic
+    public static void deposit() {
+        System.out.print("\nEnter amount to deposit: ₹");
+        double amount = sc.nextDouble();
+        sc.nextLine(); // Clear buffer
+
+        if (amount > 0) {
+            loggedInUser.balance += amount;
+            loggedInUser.addTransaction("Deposited: +₹" + amount + " | Current Balance: ₹" + loggedInUser.balance);
+            System.out.println("[SUCCESS] ₹" + amount + " deposited successfully!");
+        } else {
+            System.out.println("[Error] Invalid deposit amount threshold value.");
+        }
+    }
+
+    // 5. Withdraw Money Logic
+    public static void withdraw() {
+        System.out.print("\nEnter amount to withdraw: ₹");
+        double amount = sc.nextDouble();
+        sc.nextLine(); // Clear buffer
+
+        if (amount > 0 && amount <= loggedInUser.balance) {
+            loggedInUser.balance -= amount;
+            loggedInUser.addTransaction("Withdrawn: -₹" + amount + " | Current Balance: ₹" + loggedInUser.balance);
+            System.out.println("[SUCCESS] ₹" + amount + " withdrawn successfully!");
+        } else if (amount > loggedInUser.balance) {
+            System.out.println("[Error] Insufficient dynamic bounds vault balance! Available: ₹" + loggedInUser.balance);
+        } else {
+            System.out.println("[Error] Invalid withdrawal request parameters.");
+        }
+    }
+
+    // 6. Fund Transfer Logic (Inter-Account Transaction Matrix)
+    public static void fundTransfer() {
+        System.out.print("\nEnter Target Receiver's 10-Digit Account Number: ");
+        String targetAcc = sc.nextLine();
+
+        if (targetAcc.equals(loggedInUser.accountNumber)) {
+            System.out.println("[Error] Self-transfer evaluation pathways are restricted!");
+            return;
+        }
+
+        BankAccount receiver = null;
+        for (BankAccount acc : database) {
+            if (acc.accountNumber.equals(targetAcc)) {
+                receiver = acc;
+                break;
+            }
+        }
+
+        if (receiver == null) {
+            System.out.println("[Error] Receiver account context target path unresolved.");
+            return;
+        }
+
+        System.out.print("Enter transaction amount to transfer: ₹");
+        double amount = sc.nextDouble();
+        sc.nextLine(); // Clear buffer
+
+        if (amount > 0 && amount <= loggedInUser.balance) {
+            // Deduct from sender
+            loggedInUser.balance -= amount;
+            loggedInUser.addTransaction("Transferred: -₹" + amount + " to Acc: " + targetAcc + " | Current Balance: ₹" + loggedInUser.balance);
+
+            // Add to receiver
+            receiver.balance += amount;
+            receiver.addTransaction("Received: +₹" + amount + " from Acc: " + loggedInUser.accountNumber + " | Current Balance: ₹" + receiver.balance);
+
+            System.out.println("[SUCCESS] ₹" + amount + " transferred successfully to " + receiver.name);
+        } else if (amount > loggedInUser.balance) {
+            System.out.println("[Error] Insufficient asset limits to dispatch transfer packet!");
+        } else {
+            System.out.println("[Error] Invalid numeric allocation bounds.");
+        }
+    }
+
+    // 7. Statement Ledger Display Logic
+    public static void viewStatement() {
+        System.out.println("\n--- ACCOUNT TRANSACTION STATEMENT LEDGER ---");
+        System.out.println("Account Holder: " + loggedInUser.name + " | Current Asset Valuation: ₹" + loggedInUser.balance);
+        System.out.println("--------------------------------------------------");
+        if (loggedInUser.statement.isEmpty()) {
+            System.out.println("No transactional logs found in active storage.");
+        } else {
+            for (String log : loggedInUser.statement) {
+                System.out.println("-> " + log);
+            }
+        }
+        System.out.println("--------------------------------------------------");
     }
 }
