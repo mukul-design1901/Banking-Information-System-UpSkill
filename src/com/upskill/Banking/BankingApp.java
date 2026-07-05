@@ -34,12 +34,12 @@ public class BankingApp {
     static BankAccount loggedInUser = null;
     static Scanner sc = new Scanner(System.in);
 
-    // Week 3 Constants for Data Persistence
+    // Week 3 Constants for Storage Persistence
     static final String USER_FILE = "users_database.txt";
     static final String STATEMENT_DIR = "statements/";
 
     public static void main(String[] args) {
-        // App start hote hi local text file se purana data reload hoga
+        // App run hote hi local files se data memory me reload hoga
         loadDataFromFile();
         System.out.println("=== BANKING INFORMATION SYSTEM PROTOTYPE ===");
 
@@ -116,7 +116,7 @@ public class BankingApp {
         newAccount.addTransaction("Account Opened with Initial Deposit: ₹" + initialDeposit);
         database.add(newAccount);
 
-        // Save automatically to storage files
+        // Auto-save to text files on disk
         saveDataToFile();
         saveStatementToFile(newAccount);
 
@@ -268,7 +268,7 @@ public class BankingApp {
                 writer.println(acc.accountNumber + "," + acc.name + "," + acc.address + "," + acc.contact + "," + acc.password + "," + acc.balance);
             }
         } catch (IOException e) {
-            System.out.println("[File Error] Failed to write to user database file.");
+            System.out.println("[File Error] Failed to backup user database states.");
         }
     }
 
@@ -281,7 +281,7 @@ public class BankingApp {
                 writer.println(log);
             }
         } catch (IOException e) {
-            System.out.println("[File Error] Failed to log statement records.");
+            System.out.println("[File Error] Failed to write chronological records.");
         }
     }
 
@@ -308,7 +308,7 @@ public class BankingApp {
                 }
             }
         } catch (IOException e) {
-            System.out.println("[IO Error] Data recovery initialization process failed.");
+            System.out.println("[IO Error] Initialization recovery aborted.");
         }
     }
 
@@ -322,7 +322,7 @@ public class BankingApp {
                 acc.addTransaction(line);
             }
         } catch (IOException e) {
-            System.out.println("[IO Error] Statement sync fault detected.");
+            System.out.println("[IO Error] Statement ledger sync fault.");
         }
     }
 }
