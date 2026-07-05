@@ -34,12 +34,12 @@ public class BankingApp {
     static BankAccount loggedInUser = null;
     static Scanner sc = new Scanner(System.in);
 
-    // Week 3 File Paths
+    // Week 3 Constants for Data Persistence
     static final String USER_FILE = "users_database.txt";
     static final String STATEMENT_DIR = "statements/";
 
     public static void main(String[] args) {
-        // App start hote hi purana data load karega
+        // App start hote hi local text file se purana data reload hoga
         loadDataFromFile();
         System.out.println("=== BANKING INFORMATION SYSTEM PROTOTYPE ===");
 
@@ -116,7 +116,7 @@ public class BankingApp {
         newAccount.addTransaction("Account Opened with Initial Deposit: ₹" + initialDeposit);
         database.add(newAccount);
 
-        // Week 3 Update: File me state sync karo
+        // Save automatically to storage files
         saveDataToFile();
         saveStatementToFile(newAccount);
 
@@ -168,7 +168,7 @@ public class BankingApp {
             String newContact = sc.nextLine();
             if (!newContact.isEmpty()) loggedInUser.contact = newContact;
 
-            saveDataToFile(); // Sync disk updates
+            saveDataToFile();
             System.out.println("[SUCCESS] Your account information has been successfully updated!");
         }
     }
@@ -260,7 +260,7 @@ public class BankingApp {
         System.out.println("--------------------------------------------------");
     }
 
-    // ==================== WEEK 3: FILE PERSISTENCE LOGIC ====================
+    // ==================== WEEK 3: FILE PERSISTENCE LOGIC (FILE HANDLING) ====================
 
     private static void saveDataToFile() {
         try (PrintWriter writer = new PrintWriter(new FileWriter(USER_FILE))) {
@@ -268,7 +268,7 @@ public class BankingApp {
                 writer.println(acc.accountNumber + "," + acc.name + "," + acc.address + "," + acc.contact + "," + acc.password + "," + acc.balance);
             }
         } catch (IOException e) {
-            System.out.println("[File Error] Failed to backup centralized repository user states.");
+            System.out.println("[File Error] Failed to write to user database file.");
         }
     }
 
@@ -281,7 +281,7 @@ public class BankingApp {
                 writer.println(log);
             }
         } catch (IOException e) {
-            System.out.println("[File Error] Failed to compile chronological transaction records onto storage.");
+            System.out.println("[File Error] Failed to log statement records.");
         }
     }
 
@@ -303,12 +303,12 @@ public class BankingApp {
                     double balance = Double.parseDouble(tokens[5]);
 
                     BankAccount acc = new BankAccount(accNum, name, address, contact, password, balance);
-                    loadStatementsForAccount(acc); // Load associated logs
+                    loadStatementsForAccount(acc);
                     database.add(acc);
                 }
             }
         } catch (IOException e) {
-            System.out.println("[IO Exception] Error recovery initialization process aborted.");
+            System.out.println("[IO Error] Data recovery initialization process failed.");
         }
     }
 
@@ -322,7 +322,7 @@ public class BankingApp {
                 acc.addTransaction(line);
             }
         } catch (IOException e) {
-            System.out.println("[IO Exception] Statement sub-ledger sync fault detected.");
+            System.out.println("[IO Error] Statement sync fault detected.");
         }
     }
 }
