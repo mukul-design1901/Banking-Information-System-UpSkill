@@ -1,10 +1,10 @@
 package com.upskill.Banking;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-// Simple class to hold user data in memory
 class BankAccount {
     String accountNumber;
     String name;
@@ -12,9 +12,8 @@ class BankAccount {
     String contact;
     String password;
     double balance;
-    ArrayList<String> statement; // Week 2 Feature: Statement Ledger Tracking
+    ArrayList<String> statement;
 
-    // Constructor to create a new account object
     public BankAccount(String accountNumber, String name, String address, String contact, String password, double balance) {
         this.accountNumber = accountNumber;
         this.name = name;
@@ -23,34 +22,35 @@ class BankAccount {
         this.password = password;
         this.balance = balance;
         this.statement = new ArrayList<>();
-        // Record the opening baseline entry
-        this.statement.add("Account Opened with Initial Deposit: ₹" + balance);
     }
 
-    // Functional Transaction Methods
     public void addTransaction(String log) {
         this.statement.add(log);
     }
 }
 
 public class BankingApp {
-    // Session database to store all registered users
     static ArrayList<BankAccount> database = new ArrayList<>();
     static BankAccount loggedInUser = null;
     static Scanner sc = new Scanner(System.in);
 
+    // Week 3 File Paths
+    static final String USER_FILE = "users_database.txt";
+    static final String STATEMENT_DIR = "statements/";
+
     public static void main(String[] args) {
+        // App start hote hi purana data load karega
+        loadDataFromFile();
         System.out.println("=== BANKING INFORMATION SYSTEM PROTOTYPE ===");
 
         while (true) {
             if (loggedInUser == null) {
-                // Main Menu before logging in
                 System.out.println("\n1. Register New Account");
                 System.out.println("2. Login to Account");
                 System.out.println("3. Exit Application");
                 System.out.print("Choose an option (1-3): ");
                 int choice = sc.nextInt();
-                sc.nextLine(); // Clear scanner buffer
+                sc.nextLine();
 
                 if (choice == 1) {
                     register();
@@ -63,7 +63,6 @@ public class BankingApp {
                     System.out.println("Invalid option! Please try again.");
                 }
             } else {
-                // Dashboard Menu after successful login
                 System.out.println("\n--- Welcome " + loggedInUser.name + " (Acc No: " + loggedInUser.accountNumber + ") ---");
                 System.out.println("1. View Profile / Update Account Information");
                 System.out.println("2. Deposit Money");
@@ -73,7 +72,7 @@ public class BankingApp {
                 System.out.println("6. Logout");
                 System.out.print("Choose an option (1-6): ");
                 int choice = sc.nextInt();
-                sc.nextLine(); // Clear scanner buffer
+                sc.nextLine();
 
                 if (choice == 1) {
                     manageAccount();
@@ -87,7 +86,7 @@ public class BankingApp {
                     viewStatement();
                 } else if (choice == 6) {
                     System.out.println("Logged out successfully.");
-                    loggedInUser = null; // Reset the active session
+                    loggedInUser = null;
                 } else {
                     System.out.println("Invalid option!");
                 }
@@ -95,7 +94,6 @@ public class BankingApp {
         }
     }
 
-    // 1. User Registration Feature
     public static void register() {
         System.out.println("\n--- USER REGISTRATION FORM ---");
         System.out.print("Enter Your Full Name: ");
@@ -108,24 +106,24 @@ public class BankingApp {
         String password = sc.nextLine();
         System.out.print("Enter Initial Deposit Amount: ");
         double initialDeposit = sc.nextDouble();
-        sc.nextLine(); // Clear scanner buffer
+        sc.nextLine();
 
-        // Generate a random 10-digit account number
         Random rand = new Random();
         long num = (long) (rand.nextDouble() * 9000000000L) + 1000000000L;
         String generatedAccNum = String.valueOf(num);
 
-        // Save details to memory temporary session array list
         BankAccount newAccount = new BankAccount(generatedAccNum, name, address, contact, password, initialDeposit);
+        newAccount.addTransaction("Account Opened with Initial Deposit: ₹" + initialDeposit);
         database.add(newAccount);
 
-        // Confirmation output display
+        // Week 3 Update: File me state sync karo
+        saveDataToFile();
+        saveStatementToFile(newAccount);
+
         System.out.println("\n[SUCCESS] Registration Completed Successfully!");
         System.out.println("Your Unique Generated Account Number is: " + generatedAccNum);
-        System.out.println("Please write this down to use for logging in.");
     }
 
-    // 2. Basic Login / Password Protection Feature
     public static void login() {
         System.out.println("\n--- SECURE USER LOGIN ---");
         System.out.print("Enter Your 10-Digit Account Number: ");
@@ -134,22 +132,17 @@ public class BankingApp {
         String pass = sc.nextLine();
 
         boolean found = false;
-        // Search matching credentials inside session database
         for (BankAccount acc : database) {
             if (acc.accountNumber.equals(accNum) && acc.password.equals(pass)) {
-                loggedInUser = acc; // Establish active runtime session
+                loggedInUser = acc;
                 System.out.println("[Login Success] Welcome to your dashboard!");
                 found = true;
                 break;
             }
         }
-
-        if (!found) {
-            System.out.println("[Error] Invalid Account Number or Password. Access Denied!");
-        }
+        if (!found) System.out.println("[Error] Invalid Account Number or Password. Access Denied!");
     }
 
-    // 3. Account Management / Profile Update Feature
     public static void manageAccount() {
         System.out.println("\n--- CURRENT ACCOUNT PROFILE ---");
         System.out.println("Account Number: " + loggedInUser.accountNumber);
@@ -165,67 +158,61 @@ public class BankingApp {
         if (ans.equalsIgnoreCase("yes")) {
             System.out.print("Enter New Name (or press Enter to keep current): ");
             String newName = sc.nextLine();
-            if (!newName.isEmpty()) {
-                loggedInUser.name = newName;
-            }
+            if (!newName.isEmpty()) loggedInUser.name = newName;
 
             System.out.print("Enter New Address (or press Enter to keep current): ");
             String newAddress = sc.nextLine();
-            if (!newAddress.isEmpty()) {
-                loggedInUser.address = newAddress;
-            }
+            if (!newAddress.isEmpty()) loggedInUser.address = newAddress;
 
             System.out.print("Enter New Contact (or press Enter to keep current): ");
             String newContact = sc.nextLine();
-            if (!newContact.isEmpty()) {
-                loggedInUser.contact = newContact;
-            }
+            if (!newContact.isEmpty()) loggedInUser.contact = newContact;
 
+            saveDataToFile(); // Sync disk updates
             System.out.println("[SUCCESS] Your account information has been successfully updated!");
         }
     }
 
-    // --- WEEK 2 FUNCTIONAL MODULE IMPLEMENTATIONS ---
-
-    // 4. Deposit Money Logic
     public static void deposit() {
         System.out.print("\nEnter amount to deposit: ₹");
         double amount = sc.nextDouble();
-        sc.nextLine(); // Clear buffer
+        sc.nextLine();
 
         if (amount > 0) {
             loggedInUser.balance += amount;
-            loggedInUser.addTransaction("Deposited: +₹" + amount + " | Current Balance: ₹" + loggedInUser.balance);
+            loggedInUser.addTransaction("Deposited: +₹" + amount + " | Balance: ₹" + loggedInUser.balance);
+            saveDataToFile();
+            saveStatementToFile(loggedInUser);
             System.out.println("[SUCCESS] ₹" + amount + " deposited successfully!");
         } else {
-            System.out.println("[Error] Invalid deposit amount threshold value.");
+            System.out.println("[Error] Invalid amount.");
         }
     }
 
-    // 5. Withdraw Money Logic
     public static void withdraw() {
         System.out.print("\nEnter amount to withdraw: ₹");
         double amount = sc.nextDouble();
-        sc.nextLine(); // Clear buffer
+        sc.nextLine();
 
         if (amount > 0 && amount <= loggedInUser.balance) {
             loggedInUser.balance -= amount;
-            loggedInUser.addTransaction("Withdrawn: -₹" + amount + " | Current Balance: ₹" + loggedInUser.balance);
+            loggedInUser.addTransaction("Withdrawn: -₹" + amount + " | Balance: ₹" + loggedInUser.balance);
+            saveDataToFile();
+            saveStatementToFile(loggedInUser);
             System.out.println("[SUCCESS] ₹" + amount + " withdrawn successfully!");
         } else if (amount > loggedInUser.balance) {
-            System.out.println("[Error] Insufficient dynamic bounds vault balance! Available: ₹" + loggedInUser.balance);
+            System.out.println("[Error] Insufficient balance!");
         } else {
-            System.out.println("[Error] Invalid withdrawal request parameters.");
+            System.out.println("[Error] Invalid parameters.");
         }
     }
 
-    // 6. Fund Transfer Logic (Inter-Account Transaction Matrix)
     public static void fundTransfer() {
         System.out.print("\nEnter Target Receiver's 10-Digit Account Number: ");
         String targetAcc = sc.nextLine();
 
         if (targetAcc.equals(loggedInUser.accountNumber)) {
-            System.out.println("[Error] Self-transfer evaluation pathways are restricted!");
+            System.out.println("[Error] Self-transfer is restricted!");
             return;
         }
 
@@ -238,43 +225,104 @@ public class BankingApp {
         }
 
         if (receiver == null) {
-            System.out.println("[Error] Receiver account context target path unresolved.");
+            System.out.println("[Error] Receiver account not found.");
             return;
         }
 
-        System.out.print("Enter transaction amount to transfer: ₹");
+        System.out.print("Enter transaction amount: ₹");
         double amount = sc.nextDouble();
-        sc.nextLine(); // Clear buffer
+        sc.nextLine();
 
         if (amount > 0 && amount <= loggedInUser.balance) {
-            // Deduct from sender
             loggedInUser.balance -= amount;
-            loggedInUser.addTransaction("Transferred: -₹" + amount + " to Acc: " + targetAcc + " | Current Balance: ₹" + loggedInUser.balance);
+            loggedInUser.addTransaction("Transferred: -₹" + amount + " to Acc: " + targetAcc + " | Balance: ₹" + loggedInUser.balance);
 
-            // Add to receiver
             receiver.balance += amount;
-            receiver.addTransaction("Received: +₹" + amount + " from Acc: " + loggedInUser.accountNumber + " | Current Balance: ₹" + receiver.balance);
+            receiver.addTransaction("Received: +₹" + amount + " from Acc: " + loggedInUser.accountNumber + " | Balance: ₹" + receiver.balance);
+
+            saveDataToFile();
+            saveStatementToFile(loggedInUser);
+            saveStatementToFile(receiver);
 
             System.out.println("[SUCCESS] ₹" + amount + " transferred successfully to " + receiver.name);
-        } else if (amount > loggedInUser.balance) {
-            System.out.println("[Error] Insufficient asset limits to dispatch transfer packet!");
         } else {
-            System.out.println("[Error] Invalid numeric allocation bounds.");
+            System.out.println("[Error] Transfer failed. Check boundaries or balance.");
         }
     }
 
-    // 7. Statement Ledger Display Logic
     public static void viewStatement() {
         System.out.println("\n--- ACCOUNT TRANSACTION STATEMENT LEDGER ---");
-        System.out.println("Account Holder: " + loggedInUser.name + " | Current Asset Valuation: ₹" + loggedInUser.balance);
+        System.out.println("Account Holder: " + loggedInUser.name + " | Balance: ₹" + loggedInUser.balance);
         System.out.println("--------------------------------------------------");
-        if (loggedInUser.statement.isEmpty()) {
-            System.out.println("No transactional logs found in active storage.");
-        } else {
-            for (String log : loggedInUser.statement) {
-                System.out.println("-> " + log);
-            }
+        for (String log : loggedInUser.statement) {
+            System.out.println("-> " + log);
         }
         System.out.println("--------------------------------------------------");
+    }
+
+    // ==================== WEEK 3: FILE PERSISTENCE LOGIC ====================
+
+    private static void saveDataToFile() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(USER_FILE))) {
+            for (BankAccount acc : database) {
+                writer.println(acc.accountNumber + "," + acc.name + "," + acc.address + "," + acc.contact + "," + acc.password + "," + acc.balance);
+            }
+        } catch (IOException e) {
+            System.out.println("[File Error] Failed to backup centralized repository user states.");
+        }
+    }
+
+    private static void saveStatementToFile(BankAccount acc) {
+        File dir = new File(STATEMENT_DIR);
+        if (!dir.exists()) dir.mkdir();
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(STATEMENT_DIR + acc.accountNumber + "_statement.txt"))) {
+            for (String log : acc.statement) {
+                writer.println(log);
+            }
+        } catch (IOException e) {
+            System.out.println("[File Error] Failed to compile chronological transaction records onto storage.");
+        }
+    }
+
+    private static void loadDataFromFile() {
+        File file = new File(USER_FILE);
+        if (!file.exists()) return;
+
+        database.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] tokens = line.split(",");
+                if (tokens.length == 6) {
+                    String accNum = tokens[0];
+                    String name = tokens[1];
+                    String address = tokens[2];
+                    String contact = tokens[3];
+                    String password = tokens[4];
+                    double balance = Double.parseDouble(tokens[5]);
+
+                    BankAccount acc = new BankAccount(accNum, name, address, contact, password, balance);
+                    loadStatementsForAccount(acc); // Load associated logs
+                    database.add(acc);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("[IO Exception] Error recovery initialization process aborted.");
+        }
+    }
+
+    private static void loadStatementsForAccount(BankAccount acc) {
+        File file = new File(STATEMENT_DIR + acc.accountNumber + "_statement.txt");
+        if (!file.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                acc.addTransaction(line);
+            }
+        } catch (IOException e) {
+            System.out.println("[IO Exception] Statement sub-ledger sync fault detected.");
+        }
     }
 }
