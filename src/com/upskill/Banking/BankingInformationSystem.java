@@ -29,7 +29,7 @@ class BankAccount {
     }
 }
 
-public class BankingApp {
+public class BankingInformationSystem {
     static ArrayList<BankAccount> database = new ArrayList<>();
     static BankAccount loggedInUser = null;
     static Scanner sc = new Scanner(System.in);
